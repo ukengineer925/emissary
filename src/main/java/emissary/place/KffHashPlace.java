@@ -58,7 +58,7 @@ public class KffHashPlace extends ServiceProviderPlace {
             return;
         }
 
-        kff.hash(payload);
+        kff.hashSBC(payload, logger);
     }
 
 }

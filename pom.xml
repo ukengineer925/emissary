@@ -59,7 +59,7 @@
     <dep.logback.version>1.2.11</dep.logback.version>
     <!-- seems to have an impact with java 11 integration, update with caution -->
     <dep.maven-surefire-plugin.version>3.0.0-M3</dep.maven-surefire-plugin.version>
-    <dep.mockito-core.version>2.28.2</dep.mockito-core.version>
+    <dep.mockito-core.version>3.12.4</dep.mockito-core.version>
     <dep.oro.version>2.0.8</dep.oro.version>
     <dep.slf4j.version>1.7.36</dep.slf4j.version>
     <dep.spullara.mustache.compiler.version>0.9.10</dep.spullara.mustache.compiler.version>
@@ -449,6 +449,12 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-inline</artifactId>
+        <version>${dep.mockito-core.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>oro</groupId>
         <artifactId>oro</artifactId>
         <version>${dep.oro.version}</version>
@@ -642,6 +648,12 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.esotericsoftware</groupId>
+      <artifactId>kryo</artifactId>
+      <version>5.1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.glassfish.jersey.test-framework.providers</groupId>
       <artifactId>jersey-test-framework-provider-jetty</artifactId>
       <scope>test</scope>
@@ -654,6 +666,11 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

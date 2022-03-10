@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import emissary.core.channels.SeekableByteChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,6 +136,28 @@ public class KffChain {
         return answer;
     }
 
+    public KffResult check(String itemName, SeekableByteChannelFactory sbcf, Logger logger) throws Exception {
+        ChecksumResults sums = computeSums(sbcf, logger);
+        KffResult answer = null;
+        if (sbcf.create().size() < KFF_MIN_DATA_SIZE || list.size() == 0) {
+            answer = new KffResult(sums);
+            answer.setItemName(itemName);
+        } else {
+            // Surround checkAgainst with a try/catch to handle the
+            // case where one of the KffFilter throws an Exception.
+            // Without the try/catch, the original checksums are lost
+            // and nulled out in the output
+            try {
+                answer = checkAgainst(list, itemName, sums);
+            } catch (Exception ee) {
+                logger.debug("Problem running KffFilter list.  Using only Checksums", ee);
+                answer = new KffResult(sums);
+                answer.setItemName(itemName);
+            }
+        }
+        return answer;
+    }
+
     /**
      * Check content against one of our lists. Stop when we get a hit
      *
@@ -167,5 +190,10 @@ public class KffChain {
     public ChecksumResults computeSums(byte[] fileContents) throws Exception {
         ChecksumCalculator calc = new ChecksumCalculator(algorithms);
         return calc.digest(fileContents);
+    }
+
+    public ChecksumResults computeSums(SeekableByteChannelFactory sbcf, Logger logger) throws Exception {
+        ChecksumCalculator calc = new ChecksumCalculator(algorithms);
+        return calc.digest(sbcf, logger);
     }
 }

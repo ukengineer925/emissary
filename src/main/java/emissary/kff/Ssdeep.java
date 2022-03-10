@@ -3,9 +3,13 @@ package emissary.kff;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.channels.Channels;
+import java.nio.channels.SeekableByteChannel;
 import java.util.Arrays;
 
+import emissary.core.channels.SeekableByteChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,6 +112,18 @@ public final class Ssdeep {
          */
         public SsContext(final byte[] data) {
             final long expectedInputLength = (data != null) ? data.length : 0;
+            this.blockSize = estimateBlockSize(expectedInputLength);
+        }
+
+        public SsContext(final SeekableByteChannelFactory sbcf) {
+            long expectedInputLength = 0;
+
+            try (final SeekableByteChannel sbc = sbcf.create();) {
+                expectedInputLength = sbc.size();
+            } catch (IOException e) {
+                // Ignore
+            }
+
             this.blockSize = estimateBlockSize(expectedInputLength);
         }
 
@@ -253,6 +269,24 @@ public final class Ssdeep {
             return finishHashing(rollState);
         }
 
+        public SpamSumSignature generateHash(final SeekableByteChannelFactory sbcf) {
+            beginHashing();
+            final RollingState rollState = new RollingState();
+
+            try (final InputStream is = Channels.newInputStream(sbcf.create());) {
+                final byte[] b = new byte[1024];
+
+                int bytesRead;
+                while ((bytesRead = is.read(b)) != -1) {
+                    applyBytes(rollState, b, 0, bytesRead);
+                }
+            } catch (IOException e) {
+                // Ignore
+            }
+
+            return finishHashing(rollState);
+        }
+
         /**
          * Generate the hash for some input.
          *
@@ -364,6 +398,23 @@ public final class Ssdeep {
             // Our blocksize guess may have been way off, repeat with
             // a smaller block size if necessary.
             if ((ctx.blockSize > MIN_BLOCKSIZE) && (ctx.fuzzLen1 < (SPAMSUM_LENGTH / 2))) {
+                ctx.blockSize = ctx.blockSize / 2;
+            } else {
+                return signature.toString();
+            }
+        }
+    }
+
+    public String fuzzy_hash(final SeekableByteChannelFactory sbcf) {
+        final SsContext ctx = new SsContext(sbcf);
+        while (true) {
+            final SpamSumSignature signature = ctx.generateHash(sbcf);
+
+            // Our blocksize guess may have been way off, repeat with
+            // a smaller block size if necessary.
+            if ((ctx.blockSize > MIN_BLOCKSIZE) && (ctx.fuzzLen1 < (SPAMSUM_LENGTH / 2))) {
+                logger.info("ZIPPLACE: SSDEEP reducing bS={} fL1={} s.l={} ({})", ctx.blockSize, ctx.fuzzLen1, signature.toString().length(),
+                        System.currentTimeMillis());
                 ctx.blockSize = ctx.blockSize / 2;
             } else {
                 return signature.toString();

@@ -1,9 +1,11 @@
 package emissary.kff;
 
+import java.nio.channels.SeekableByteChannel;
 import java.util.HashMap;
 import java.util.Map;
 
 import emissary.core.IBaseDataObject;
+import emissary.core.channels.SeekableByteChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,6 +113,44 @@ public class KffDataObjectHandler {
         return results;
     }
 
+    public Map<String, String> hashData(SeekableByteChannelFactory sbcf, String name, String prefix, Logger logger) {
+        logger.info("ZIPPLACE: hashData Start");
+
+        Map<String, String> results = new HashMap<String, String>();
+
+        if (prefix == null) {
+            prefix = "";
+        }
+
+        if (sbcf != null) {
+            try (final SeekableByteChannel sbc = sbcf.create()) {
+                if (sbc.size() > 0) {
+                    logger.info("ZIPPLACE: hashData Before check");
+                    KffResult kffCheck = kff.check(name, sbcf, logger);
+                    logger.info("ZIPPLACE: hashData After check");
+
+                    // Store all computed results in data object params
+                    for (String alg : kffCheck.getResultNames()) {
+                        results.put(prefix + KFF_PARAM_BASE + alg, kffCheck.getResultString(alg));
+                    }
+
+                    // Set params if we have a hit
+                    if (kffCheck.isKnown()) {
+                        results.put(prefix + KFF_PARAM_KNOWN_FILTER_NAME, kffCheck.getFilterName());
+                    }
+                    if (kffCheck.isDupe()) {
+                        results.put(prefix + KFF_PARAM_DUPE_FILTER_NAME, kffCheck.getFilterName());
+                    }
+                }
+            } catch (Exception kffex) {
+                logger.warn("Unable to compute kff on " + name, kffex);
+            }
+        }
+        logger.info("ZIPPLACE: hashData Start");
+
+        return results;
+    }
+
     /**
      * Compute the hash of a data object's data
      * 
@@ -124,6 +164,32 @@ public class KffDataObjectHandler {
         if (d != null && d.dataLength() > 0) {
             // Compute and add the hashes
             d.putParameters(hashData(d.data(), d.shortName()));
+
+            // Set params if we have a hit
+            if (d.hasParameter(KFF_PARAM_KNOWN_FILTER_NAME)) {
+                if (setFileTypeOnKnown) {
+                    d.setFileType(KFF_DUPE_CURRENT_FORM);
+                }
+                if (setFormOnKnownData) {
+                    d.replaceCurrentForm(KFF_DUPE_CURRENT_FORM);
+                }
+                if (truncateKnownData) {
+                    d.setData(null);
+                }
+            }
+        }
+    }
+
+    public void hashSBC(IBaseDataObject d, Logger logger) {
+        if (d != null) {
+            removeHash(d);
+        }
+
+        if (d != null && d.dataLength() > 0) {
+            // Compute and add the hashes
+            logger.info("ZIPPLACE: hashSBC Before hashData");
+            d.putParameters(hashData(d.getChannelFactory(), d.shortName(), "", logger));
+            logger.info("ZIPPLACE: hashSBC After hashData");
 
             // Set params if we have a hit
             if (d.hasParameter(KFF_PARAM_KNOWN_FILTER_NAME)) {

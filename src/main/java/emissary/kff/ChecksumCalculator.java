@@ -1,11 +1,17 @@
 package emissary.kff;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.Channels;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.zip.CRC32;
+
+import emissary.core.channels.SeekableByteChannelFactory;
+import org.slf4j.Logger;
 
 /**
  * ChecksumCalculator is a utility class which computes checksums and message digests.
@@ -151,6 +157,55 @@ public class ChecksumCalculator {
         // Only use ssdeep if non-null
         if (ssdeep != null) {
             res.setSsdeep(ssdeep.fuzzy_hash(buffer));
+        }
+
+        return res;
+    }
+
+    public ChecksumResults digest(SeekableByteChannelFactory sbcf, Logger logger) {
+        final ChecksumResults res = new ChecksumResults();
+        final byte[] b = new byte[1024];
+
+        long lastTime = System.currentTimeMillis();
+
+        for (MessageDigest d : digest) {
+            try (final InputStream is = Channels.newInputStream(sbcf.create());) {
+                d.reset();
+
+                long totalBytesRead = 0;
+                int bytesRead;
+                while ((bytesRead = is.read(b)) != -1) {
+                    d.update(b, 0, bytesRead);
+                    totalBytesRead += totalBytesRead;
+                    if (System.currentTimeMillis() - lastTime > 1000) {
+                        logger.info("ZIPPLACE: {}: t={} tBR={}", d.getAlgorithm(), System.currentTimeMillis(), totalBytesRead);
+                        lastTime = System.currentTimeMillis();
+                    }
+                }
+
+                res.setHash(d.getAlgorithm(), d.digest());
+            } catch (IOException e) {
+                // Ignore
+            }
+        }
+
+        if (crc != null) {
+            try (final InputStream is = Channels.newInputStream(sbcf.create());) {
+                crc.reset();
+
+                int bytesRead;
+                while ((bytesRead = is.read(b)) != -1) {
+                    crc.update(b, 0, bytesRead);
+                }
+
+                res.setCrc(crc.getValue());
+            } catch (IOException e) {
+                // Ignore
+            }
+        }
+
+        if (ssdeep != null) {
+            res.setSsdeep(ssdeep.fuzzy_hash(sbcf));
         }
 
         return res;

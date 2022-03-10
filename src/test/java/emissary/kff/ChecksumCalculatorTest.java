@@ -1,5 +1,6 @@
 package emissary.kff;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -10,8 +11,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Set;
 
+import emissary.core.channels.SeekableByteChannelFactory;
+import emissary.core.channels.SeekableByteChannelHelper;
 import emissary.test.core.UnitTest;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 
 class ChecksumCalculatorTest extends UnitTest {
 
@@ -141,6 +145,23 @@ class ChecksumCalculatorTest extends UnitTest {
             assertEquals(-1L, cr.getCrc(), "CRC not computed");
         } catch (NoSuchAlgorithmException ex) {
             throw new AssertionError("Unable to get SHA-1 or SHA-256 algorithm", ex);
+        }
+    }
+
+    @Test
+    void testCompareByteArrayAndSbcDigests() throws Exception {
+        ChecksumCalculator cc = new ChecksumCalculator(new String[] {"CRC32", "SHA-1", "SHA-256", "SSDEEP"});
+
+        for (int i = 0; i < 1000; i++) {
+            final byte[] b = new byte[0];
+            final SeekableByteChannelFactory sbcf = SeekableByteChannelHelper.memory(b);
+            final ChecksumResults crByte = cc.digest(b);
+            final ChecksumResults crSbcf = cc.digest(sbcf, LoggerFactory.getLogger(this.getClass()));
+
+            assertEquals(crByte.getCrc(), crSbcf.getCrc(), "CRC's do not match!");
+            assertEquals(crByte.getSsdeep(), crSbcf.getSsdeep(), "SSDEEP's do not match!");
+            assertArrayEquals(crByte.getHash("SHA-1"), crSbcf.getHash("SHA-1"), "SHA-1's do not match!");
+            assertArrayEquals(crByte.getHash("SHA-256"), crSbcf.getHash("SHA-256"), "SHA-256's do not match!");
         }
     }
 }

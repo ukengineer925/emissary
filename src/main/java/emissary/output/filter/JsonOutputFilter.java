@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.databind.ser.std.MapProperty;
 import emissary.config.Configurator;
 import emissary.core.IBaseDataObject;
+import emissary.core.channels.SeekableByteChannelFactory;
 import emissary.directory.DirectoryEntry;
 import emissary.util.TimeUtil;
 import org.apache.commons.collections4.CollectionUtils;
@@ -255,6 +256,9 @@ public class JsonOutputFilter extends AbstractRollableFilter {
         @JsonProperty("members")
         @JsonInclude(NON_EMPTY)
         abstract List<IBaseDataObject> getExtractedRecords();
+
+        @JsonIgnore
+        abstract SeekableByteChannelFactory getChannelFactory();
 
         @JsonIgnore
         abstract int dataLength();

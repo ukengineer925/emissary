@@ -161,7 +161,7 @@ public abstract class MultiFileServerPlace extends PickUpPlace implements IMulti
             child.setHistory(parent.transformHistory());
         }
         child.appendTransformHistory(KeyManipulator.makeSproutKey(myKey));
-        child.putParameter(emissary.parser.SessionParser.ORIG_DOC_SIZE_KEY, Integer.toString(child.data().length));
+        child.putParameter(emissary.parser.SessionParser.ORIG_DOC_SIZE_KEY, Integer.toString(child.dataLength()));
 
         // start over with no FILETYPE if so directed
         if (nullifyFileType) {

@@ -221,6 +221,8 @@ public class DropOffPlace extends ServiceProviderPlace implements emissary.place
                     tld.getFileType());
         }
 
+        executeDisposeRunnables(payloadList);
+
         // This place does not sprout, return an empty list
         return Collections.emptyList();
     }
@@ -250,6 +252,32 @@ public class DropOffPlace extends ServiceProviderPlace implements emissary.place
             }
         } else {
             processData(tData, false);
+        }
+
+        executeDisposeRunnables(tData);
+    }
+
+    private void executeDisposeRunnables(final IBaseDataObject iBaseDataObject) {
+        if (iBaseDataObject.hasParameter("DISPOSE_RUNNABLES")) {
+            final List<Object> disposeRunnables = iBaseDataObject.getParameter("DISPOSE_RUNNABLES");
+
+            for (int i = 0; i < disposeRunnables.size(); i++) {
+                final Object runnable = disposeRunnables.get(i);
+
+                if (runnable instanceof Runnable) {
+                    try {
+                        ((Runnable) runnable).run();
+                    } catch (final Exception e) {
+                        logger.warn("Exception while executing Runnable for {}", iBaseDataObject.shortName(), e);
+                    }
+                }
+            }
+        }
+    }
+
+    private void executeDisposeRunnables(final List<IBaseDataObject> iBaseDataObjects) {
+        for (int i = 0; i < iBaseDataObjects.size(); i++) {
+            executeDisposeRunnables(iBaseDataObjects.get(i));
         }
     }
 
