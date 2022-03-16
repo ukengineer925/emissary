@@ -8,8 +8,19 @@ on:
 
 jobs:
   build:
-
+    name: Standard build on Java ${{ matrix.java }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['8', '11']
+        experimental: [false]
+        include:
+          - java: '16'
+            experimental: true
+          - java: '17'
+            experimental: true
+    continue-on-error: ${{ matrix.experimental }}
 
     steps:
     - name: Checkout repo
@@ -18,9 +29,9 @@ jobs:
     - name: Configure Java
       uses: actions/setup-java@v3
       with:
-        java-version: 8
+        java-version: '${{ matrix.java }}'
         cache: 'maven'
-        distribution: temurin
+        distribution: 'temurin'
 
     - name: Build with Maven
       run: mvn -B --no-transfer-progress package --file pom.xml
