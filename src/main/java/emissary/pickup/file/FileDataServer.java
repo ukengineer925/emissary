@@ -24,8 +24,6 @@ public class FileDataServer extends Pausable {
     // Ref to my owner
     protected FilePickUpPlace myParent = null;
 
-    // protected int filesInList;
-
     // Thread safe termination
     protected boolean timeToShutdown = false;
 
@@ -42,7 +40,7 @@ public class FileDataServer extends Pausable {
      * @param parent the FPP that created me
      * @param pollingInterval how often to check for new files in millis
      */
-    public FileDataServer(String inputDataDirectory, FilePickUpPlace parent, long pollingInterval) {
+    public FileDataServer(final String inputDataDirectory, final FilePickUpPlace parent, final long pollingInterval) {
 
         // Name the thread
         super("FileInput-" + inputDataDirectory);
@@ -67,7 +65,7 @@ public class FileDataServer extends Pausable {
      * 
      * @param sz the new value for bundleSize
      */
-    public void setBundleSize(int sz) {
+    public void setBundleSize(final int sz) {
         bundleSize = sz;
     }
 
@@ -84,17 +82,17 @@ public class FileDataServer extends Pausable {
                 continue;
             }
 
-            String holdDir = myParent.getInProcessArea();
-            String errDir = myParent.getErrorArea();
+            final String holdDir = myParent.getInProcessArea();
+            final String errDir = myParent.getErrorArea();
 
             // Process files currently in the pickup directory, list
             // the first bundleSize in a batch
-            String[] fileList = theDirectory.list(new FilenameFilter() {
+            final String[] fileList = theDirectory.list(new FilenameFilter() {
                 final int MAXFILESTOLIST = bundleSize;
                 int filesInList = 0;
 
                 @Override
-                public boolean accept(File dir, String name) {
+                public boolean accept(final File dir, final String name) {
                     return (!name.startsWith(".")) && ++filesInList <= MAXFILESTOLIST;
                 }
             });
@@ -102,7 +100,7 @@ public class FileDataServer extends Pausable {
             // Rename all of the selected files out of the
             // polling area
             for (int i = 0; fileList != null && i < fileList.length; i++) {
-                File f = new File(theDataDir, fileList[i]);
+                final File f = new File(theDataDir, fileList[i]);
 
                 if (!f.exists() || !f.isFile() || !f.canRead()) {
                     reportProblem(f, errDir);
@@ -110,12 +108,12 @@ public class FileDataServer extends Pausable {
                 }
 
                 // Move to in process area
-                File newFile = new File(holdDir, fileList[i]);
+                final File newFile = new File(holdDir, fileList[i]);
                 if (!f.renameTo(newFile)) {
                     // This is normal when many FileDataServers
                     // on multiple machines are looking at the
                     // same underlying filesystem space
-                    logger.warn("FileDataServer - file: " + f.getPath() + " Could not be renamed to: " + newFile.getPath());
+                    logger.warn("FileDataServer - file: {} Could not be renamed to: {}", f.getPath(), newFile.getPath());
                     fileList[i] = null;
                 }
             }
@@ -130,14 +128,14 @@ public class FileDataServer extends Pausable {
                 }
 
                 // Notify parent to process file
-                File newFile = new File(holdDir, fileList[i]);
+                final File newFile = new File(holdDir, fileList[i]);
                 try {
                     MDC.put(MDCConstants.SHORT_NAME, fileList[i]);
                     myParent.processDataFile(newFile);
                     processedCount++;
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     logger.warn("***Cannot process {}", newFile, e);
-                    boolean renamed = newFile.renameTo(new File(errDir, newFile.getName()));
+                    final boolean renamed = newFile.renameTo(new File(errDir, newFile.getName()));
                     if (!renamed) {
                         logger.warn("***Cannot move {} to the error directory {}", newFile, errDir);
                     }
@@ -153,7 +151,7 @@ public class FileDataServer extends Pausable {
             if (processedCount == 0) {
                 try {
                     Thread.sleep(pollingInterval);
-                } catch (InterruptedException e) { /* Dont care */
+                } catch (final InterruptedException e) { /* Dont care */
                 }
             }
 
@@ -165,10 +163,10 @@ public class FileDataServer extends Pausable {
      * 
      * @param f the file having the problem
      */
-    protected void reportProblem(File f, String errDir) {
+    protected void reportProblem(final File f, final String errDir) {
         MDC.put(MDCConstants.SHORT_NAME, f.getPath());
         try {
-            String n = f.getName();
+            final String n = f.getName();
             boolean renamed = false;
 
             if (f.exists()) {

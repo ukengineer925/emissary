@@ -32,7 +32,7 @@ public class SessionProducer {
      * @param myKey Value to stick into the transform history, obsolete
      * @param initialForms Forms to be preloaded onto the form stack.
      */
-    public SessionProducer(SessionParser sp, String myKey, List<String> initialForms) {
+    public SessionProducer(final SessionParser sp, final String myKey, final List<String> initialForms) {
         this.sp = sp;
         // this.myKey = myKey;
         this.initialForms = initialForms;
@@ -44,18 +44,18 @@ public class SessionProducer {
      * @param sp The SessionParser, which has parsed theContent.
      * @param initialForm Form value to be preloaded onto the form stack.
      */
-    public SessionProducer(SessionParser sp, String initialForm) {
+    public SessionProducer(final SessionParser sp, final String initialForm) {
         this.sp = sp;
         this.initialForms = new ArrayList<String>();
         this.initialForms.add(initialForm);
     }
 
-    public IBaseDataObject createAndLoadDataObject(DecomposedSession session, String defaultSessionName) {
-        byte[] theHeader = session.getHeader();
-        byte[] theFooter = session.getFooter();
-        byte[] theData = session.getData();
-        String classification = session.getClassification();
-        Map<String, Collection<Object>> metadata = session.getMetaData();
+    public IBaseDataObject createAndLoadDataObject(final DecomposedSession session, final String defaultSessionName) {
+        final byte[] theHeader = session.getHeader();
+        final byte[] theFooter = session.getFooter();
+        final byte[] theData = session.getData();
+        final String classification = session.getClassification();
+        final Map<String, Collection<Object>> metadata = session.getMetaData();
 
         String sName = null;
         if (sp != null) {
@@ -65,7 +65,7 @@ public class SessionProducer {
             sName = defaultSessionName;
         }
 
-        IBaseDataObject dataObject = DataObjectFactory.getInstance(new Object[] {theData, sName});
+        final IBaseDataObject dataObject = DataObjectFactory.getInstance(new Object[] {theData, sName});
 
         // Pop default form if we have something to say
         if (initialForms != null && initialForms.size() > 0) {
@@ -76,7 +76,7 @@ public class SessionProducer {
             }
         }
 
-        List<String> sessionForms = session.getInitialForms();
+        final List<String> sessionForms = session.getInitialForms();
         if (sessionForms != null && sessionForms.size() > 0) {
             dataObject.popCurrentForm();
             for (int j = sessionForms.size() - 1; j >= 0; j--) {
@@ -98,16 +98,16 @@ public class SessionProducer {
 
         if (metadata != null) {
             // Look for alternate view data (use iterator so we can remove)
-            Iterator<Map.Entry<String, Collection<Object>>> iter = metadata.entrySet().iterator();
+            final Iterator<Map.Entry<String, Collection<Object>>> iter = metadata.entrySet().iterator();
             while (iter.hasNext()) {
-                Map.Entry<String, Collection<Object>> entry = iter.next();
-                String key = entry.getKey();
+                final Map.Entry<String, Collection<Object>> entry = iter.next();
+                final String key = entry.getKey();
                 if (key.startsWith(ALT_VIEW_PARAM_PREFIX)) {
-                    String baseViewName = key.substring(ALT_VIEW_PARAM_PREFIX.length());
+                    final String baseViewName = key.substring(ALT_VIEW_PARAM_PREFIX.length());
                     int viewCounter = 0;
-                    Collection<Object> values = entry.getValue();
-                    for (Object valueItem : values) {
-                        String viewName = baseViewName + (viewCounter > 0 ? ("." + Integer.toString(viewCounter)) : "");
+                    final Collection<Object> values = entry.getValue();
+                    for (final Object valueItem : values) {
+                        final String viewName = baseViewName + (viewCounter > 0 ? ("." + Integer.toString(viewCounter)) : "");
                         if (valueItem instanceof byte[]) {
                             dataObject.addAlternateView(viewName, (byte[]) valueItem);
                         } else {
@@ -132,8 +132,8 @@ public class SessionProducer {
      * @param defaultSessionName name to use if we have nothing better
      * @return the IBaseDataObject implementation from the Factory
      */
-    public IBaseDataObject getNextSession(String defaultSessionName) throws ParserException {
-        DecomposedSession d = sp.getNextSession();
+    public IBaseDataObject getNextSession(final String defaultSessionName) throws ParserException {
+        final DecomposedSession d = sp.getNextSession();
         return createAndLoadDataObject(d, defaultSessionName);
     }
 }

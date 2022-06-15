@@ -238,6 +238,18 @@ public class BaseDataObject implements Serializable, Cloneable, Remote, IBaseDat
     }
 
     /**
+     * Create a new BaseDataObject with SeekableByteChannelFactory and name passed in.
+     *
+     * @param newData the bytes to hold
+     * @param name the name of the data item
+     */
+    public BaseDataObject(final SeekableByteChannelFactory sbcf, final String name) {
+        setChannelFactory(sbcf);
+        setFilename(name);
+        setCreationTimestamp(new Date(System.currentTimeMillis()));
+    }
+
+    /**
      * Create a new BaseDataObject with byte array, name, and initial form WARNING: this implementation uses the passed in
      * array directly, no copy is made so the caller should not reuse the array.
      *

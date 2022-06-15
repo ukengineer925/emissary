@@ -16,7 +16,7 @@ public class FilePickUpPlace extends emissary.pickup.PickUpPlace implements IPic
     protected int pollingInterval = 30000;
 
     // List of FileDataServer objects
-    protected List<FileDataServer> theDataServer = new ArrayList<FileDataServer>();
+    protected List<FileDataServer> theDataServer = new ArrayList<>();
 
     // How many files the FileDataServer should group
     protected int BUNDLE_SIZE = 20;
@@ -36,7 +36,7 @@ public class FilePickUpPlace extends emissary.pickup.PickUpPlace implements IPic
     /**
      * Create, configure, and register
      */
-    public FilePickUpPlace(String configInfo, String dir, String placeLoc) throws IOException {
+    public FilePickUpPlace(final String configInfo, final String dir, final String placeLoc) throws IOException {
 
         super(configInfo, dir, placeLoc);
         configurePlace();
@@ -54,7 +54,7 @@ public class FilePickUpPlace extends emissary.pickup.PickUpPlace implements IPic
     protected void configurePlace() {
         pollingInterval = configG.findIntEntry("POLLING_INTERVAL", pollingInterval);
         BUNDLE_SIZE = configG.findIntEntry("BUNDLE_SIZE", BUNDLE_SIZE);
-        List<String> params = configG.findEntries("INPUT_DATA");
+        final List<String> params = configG.findEntries("INPUT_DATA");
         inputDataDirs = params.toArray(new String[0]);
     }
 
@@ -63,7 +63,7 @@ public class FilePickUpPlace extends emissary.pickup.PickUpPlace implements IPic
      */
     @Override
     public void shutDown() {
-        for (Iterator<FileDataServer> i = theDataServer.iterator(); i.hasNext();) {
+        for (final Iterator<FileDataServer> i = theDataServer.iterator(); i.hasNext();) {
             logger.info("*** Stopping FilePickUpPlace ");
             i.next().shutdown();
         }
@@ -74,7 +74,7 @@ public class FilePickUpPlace extends emissary.pickup.PickUpPlace implements IPic
      */
     @Override
     public void pause() {
-        for (FileDataServer i : theDataServer) {
+        for (final FileDataServer i : theDataServer) {
             logger.info("*** Pausing {} for {}", i.getClass().getName(), getClass().getName());
             i.pause();
         }
@@ -85,7 +85,7 @@ public class FilePickUpPlace extends emissary.pickup.PickUpPlace implements IPic
      */
     @Override
     public void unpause() {
-        for (FileDataServer i : theDataServer) {
+        for (final FileDataServer i : theDataServer) {
             logger.info("*** Unpausing {} for {}", i.getClass().getName(), getClass().getName());
             i.unpause();
         }
@@ -99,7 +99,7 @@ public class FilePickUpPlace extends emissary.pickup.PickUpPlace implements IPic
      */
     @Override
     public boolean isPaused() {
-        for (FileDataServer i : theDataServer) {
+        for (final FileDataServer i : theDataServer) {
             if (i.isPaused()) {
                 return true;
             }
@@ -112,7 +112,7 @@ public class FilePickUpPlace extends emissary.pickup.PickUpPlace implements IPic
      */
     public void startDataServer() {
         for (int i = 0; i < inputDataDirs.length; i++) {
-            FileDataServer fds = new FileDataServer(inputDataDirs[i], this, pollingInterval);
+            final FileDataServer fds = new FileDataServer(inputDataDirs[i], this, pollingInterval);
 
             // Tell it how many files to pick up at a time
             fds.setBundleSize(BUNDLE_SIZE);
@@ -128,7 +128,7 @@ public class FilePickUpPlace extends emissary.pickup.PickUpPlace implements IPic
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         mainRunner(FilePickUpPlace.class.getName(), args);
     }
 }
