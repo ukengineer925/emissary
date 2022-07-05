@@ -1371,7 +1371,7 @@
               <descriptors>
                 <descriptor>src/assembly/dist.xml</descriptor>
               </descriptors>
-              <finalName>emissary-${project.version}</finalName>
+              <finalName>emissary</finalName>
             </configuration>
             <executions>
               <execution>
